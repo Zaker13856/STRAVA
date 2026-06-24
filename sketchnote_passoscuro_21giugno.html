@@ -1,0 +1,165 @@
+
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+  .sk{font-family:'Caveat',cursive;background:#F5F0EB;padding:28px 24px 24px;border-radius:8px;color:#1A1A1A;max-width:680px;box-sizing:border-box}
+  .sk-title{font-size:24px;font-weight:700;line-height:1.3;margin:0 0 4px}
+  .sk-sub{font-size:15px;color:#666;margin:0 0 20px}
+  .oline{border-bottom:3px solid #F4830A;display:inline}
+  .sk-stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+  .sk-pill{border:2px solid #1A1A1A;border-radius:255px 8px 225px 8px/8px 225px 8px 255px;padding:6px 14px;display:flex;flex-direction:column;align-items:center;min-width:72px}
+  .sk-pill-val{font-size:20px;font-weight:700;line-height:1}
+  .sk-pill-lbl{font-size:12px;color:#777}
+  .sk-pill-o{border-color:#F4830A}
+  .sk-pill-o .sk-pill-val{color:#F4830A}
+  .sk-box{border:2.5px solid #1A1A1A;border-radius:12px 255px 12px 225px/225px 12px 255px 12px;padding:16px 20px;margin-bottom:14px}
+  .sk-box-title{font-size:19px;font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .sk-badge{background:#F4830A;color:#fff;border-radius:4px;padding:2px 9px;font-size:13px;font-weight:700}
+  .sk-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:14px}
+  .sk-col-h{font-size:13px;font-weight:700;color:#F4830A;border-bottom:2px solid #F4830A;padding-bottom:3px;margin-bottom:7px}
+  .sk-row{margin-bottom:4px}
+  .dpos{color:#2a9d4e;font-weight:700}
+  .sk-3col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+  .sk-mini{border:2px solid #1A1A1A;border-radius:8px 225px 8px 255px/255px 8px 225px 8px;padding:12px 14px}
+  .sk-mini-title{font-size:13px;font-weight:700;color:#F4830A;border-bottom:2px solid #F4830A;padding-bottom:3px;margin:0 0 8px}
+  .medal-row{display:flex;align-items:center;gap:6px;margin:4px 0}
+  .mdot{width:20px;height:20px;border-radius:50%;border:2px solid #1A1A1A;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+  .gold{background:#F4C842}
+  .silver{background:#C0C0C0}
+  .bronze{background:#CD7F32}
+  .lap-row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px}
+  .lap-lbl{min-width:42px;font-size:13px}
+  .bar{height:20px;border-radius:2px;display:flex;align-items:center;padding:0 7px;font-size:13px;font-weight:700;font-family:'Caveat',cursive;color:#F5F0EB;background:#1A1A1A;transition:width .3s}
+  .bar-o{background:#F4830A}
+  .lap-note{font-size:12px;color:#888}
+  .tip-item{font-size:13px;line-height:1.4;margin-bottom:7px}
+  .tip-num{color:#F4830A;font-weight:700}
+</style>
+
+<div class="sk">
+  <h2 class="sr-only">Debrief ciclismo — Passoscuro · Giro del Lago · Manziana · Sasso, 21 giugno 2026</h2>
+
+  <!-- HEADER -->
+  <div style="margin-bottom:18px">
+    <div class="sk-title">
+      Passoscuro &rarr; Giro del Lago &rarr; Manziana &rarr; <span class="oline">Sasso</span> &rarr; Passoscuro
+    </div>
+    <div class="sk-sub">21 giugno 2026 &nbsp;&middot;&nbsp; Cannondale SuperSix EVO &nbsp;&middot;&nbsp; Ultegra 2&times;</div>
+  </div>
+
+  <!-- STATS PILLS -->
+  <div class="sk-stats">
+    <div class="sk-pill"><span class="sk-pill-val">106</span><span class="sk-pill-lbl">km</span></div>
+    <div class="sk-pill"><span class="sk-pill-val">+981</span><span class="sk-pill-lbl">m D+</span></div>
+    <div class="sk-pill"><span class="sk-pill-val">3h55'</span><span class="sk-pill-lbl">moving</span></div>
+    <div class="sk-pill"><span class="sk-pill-val">27.0</span><span class="sk-pill-lbl">km/h</span></div>
+    <div class="sk-pill"><span class="sk-pill-val">129</span><span class="sk-pill-lbl">FC media</span></div>
+    <div class="sk-pill"><span class="sk-pill-val">76</span><span class="sk-pill-lbl">rpm &uarr;</span></div>
+    <div class="sk-pill sk-pill-o"><span class="sk-pill-val">11</span><span class="sk-pill-lbl">PR totali</span></div>
+  </div>
+
+  <!-- HERO VICARELLO -->
+  <div class="sk-box">
+    <div class="sk-box-title">
+      &#9733; Il dato della settimana
+      <span class="sk-badge">3 ORO &mdash; Vicarello</span>
+    </div>
+    <div style="font-size:13px;color:#666;margin-bottom:12px">
+      Pi&ugrave; veloce di 8 giorni fa, con meno battiti &rarr; efficienza aerobica in crescita
+    </div>
+    <div class="sk-grid2">
+      <div>
+        <div class="sk-col-h">13 giugno</div>
+        <div class="sk-row">Climb 680m &nbsp;2'12" &nbsp;FC 167</div>
+        <div class="sk-row">Completa 829m &nbsp;2'32" &nbsp;FC 165</div>
+        <div class="sk-row">Sprint 1.09km &nbsp;2'57" &nbsp;FC 162</div>
+      </div>
+      <div>
+        <div class="sk-col-h">21 giugno &#9733;</div>
+        <div class="sk-row">2'04" FC 160 <span class="dpos">(&minus;8s &minus;7bpm)</span></div>
+        <div class="sk-row">2'22" FC 158 <span class="dpos">(&minus;10s &minus;7bpm)</span></div>
+        <div class="sk-row">2'50" FC 152 <span class="dpos">(&minus;7s &minus;10bpm)</span></div>
+      </div>
+    </div>
+    <svg width="100%" height="22" style="display:block;margin-top:10px">
+      <line x1="20" y1="11" x2="620" y2="11" stroke="#F4830A" stroke-width="1.5" stroke-dasharray="4,4"/>
+      <text x="50%" y="15" text-anchor="middle" font-family="Caveat,cursive" font-size="13" fill="#F4830A" font-weight="700">stesso sforzo percepito &rarr; risultato migliore</text>
+    </svg>
+  </div>
+
+  <!-- 3 COLONNE -->
+  <div class="sk-3col">
+    <!-- CADENZA -->
+    <div class="sk-mini">
+      <div class="sk-mini-title">Cadenza rpm</div>
+      <div style="font-size:28px;font-weight:700;line-height:1">73 &rarr; 76</div>
+      <div style="font-size:12px;color:#777;margin-bottom:8px">media uscite</div>
+      <div style="font-size:12px;border-top:1px dashed #ccc;padding-top:6px">
+        Obiettivo: <strong>83&ndash;88</strong><br>in piano a 30 km/h<br>
+        <span style="color:#F4830A">Sprint: gi&agrave; 91 rpm!</span>
+      </div>
+    </div>
+
+    <!-- PR MEDALS -->
+    <div class="sk-mini">
+      <div class="sk-mini-title">Medaglie PR</div>
+      <div class="medal-row">
+        <div class="mdot gold">1</div>
+        <span style="font-size:22px;font-weight:700">&times;3</span>
+        <span style="font-size:12px;color:#777">oro</span>
+      </div>
+      <div class="medal-row">
+        <div class="mdot silver">2</div>
+        <span style="font-size:22px;font-weight:700">&times;1</span>
+        <span style="font-size:12px;color:#777">argento</span>
+      </div>
+      <div class="medal-row">
+        <div class="mdot bronze">3</div>
+        <span style="font-size:22px;font-weight:700">&times;7</span>
+        <span style="font-size:12px;color:#777">bronzo</span>
+      </div>
+      <div style="border-top:1px dashed #1A1A1A;margin-top:7px;padding-top:5px;font-size:14px;font-weight:700">11 totali</div>
+    </div>
+
+    <!-- PROSSIMA USCITA -->
+    <div class="sk-mini">
+      <div class="sk-mini-title">Prossima uscita</div>
+      <div class="tip-item"><span class="tip-num">&#9312;</span> Cadenza<br>83 rpm min in piano</div>
+      <div class="tip-item"><span class="tip-num">&#9313;</span> Vicarello<br>punta FC &lt;155</div>
+      <div class="tip-item"><span class="tip-num">&#9314;</span> Zone<br>&gt;80% in Z1&ndash;Z2</div>
+    </div>
+  </div>
+
+  <!-- LAP PROGRESSION -->
+  <div class="sk-box" style="margin-bottom:0">
+    <div class="sk-box-title">Progressione lap</div>
+    <div class="lap-row">
+      <span class="lap-lbl">Lap 1</span>
+      <div class="bar" style="width:50%">26.2 km/h</div>
+      <span class="lap-note">40 km &middot; 75 rpm</span>
+    </div>
+    <div class="lap-row">
+      <span class="lap-lbl">Lap 2</span>
+      <div class="bar" style="width:58%">27.0 km/h</div>
+      <span class="lap-note">30 km &middot; 76 rpm</span>
+    </div>
+    <div class="lap-row">
+      <span class="lap-lbl">Lap 3</span>
+      <div class="bar" style="width:66%">28.1 km/h</div>
+      <span class="lap-note">22 km &middot; 77 rpm</span>
+    </div>
+    <div class="lap-row">
+      <span class="lap-lbl">Lap 4</span>
+      <div class="bar bar-o" style="width:84%">30.4 km/h</div>
+      <span class="lap-note" style="font-weight:700;color:#F4830A">14 km &middot; 82 rpm &#9733;</span>
+    </div>
+    <div style="font-size:13px;color:#F4830A;margin-top:8px;font-style:italic">
+      &uarr; finisce forte: sforzo distribuito bene
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div style="margin-top:14px;font-size:11px;color:#aaa;text-align:right;border-top:1px dashed #ccc;padding-top:8px">
+    Strava &middot; Garmin &middot; FCmax 182 bpm
+  </div>
+</div>
