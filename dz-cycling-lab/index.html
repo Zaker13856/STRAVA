@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DZ LAB">
+  <title>DZ CYCLING AI LAB</title>
+  <style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#000;color:#fff;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;overflow:hidden;width:100vw;height:100vh;}
+
+/* OVERLAY */
+#overlay{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;cursor:pointer;transition:opacity 0.6s ease;}
+#overlay.hide{opacity:0;pointer-events:none;}
+#ov-logo{font-size:clamp(36px,6.5vw,80px);font-weight:900;letter-spacing:-2px;text-align:center;line-height:1.05;}
+#ov-tag{font-size:12px;letter-spacing:9px;text-transform:uppercase;color:#888;margin-top:18px;}
+#ov-cta{margin-top:56px;padding:14px 44px;border:1px solid #222;font-size:10px;letter-spacing:5px;text-transform:uppercase;color:#555;animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{border-color:#222;color:#333;}50%{border-color:#00FF87;color:#00FF87;}}
+
+/* COUNTDOWN */
+#countdown{position:fixed;inset:0;background:#000;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:998;}
+#cd-num{font-size:clamp(120px,25vw,300px);font-weight:900;line-height:1;color:#fff;}
+#cd-bar{width:200px;height:2px;background:#111;margin-top:40px;overflow:hidden;}
+#cd-fill{height:100%;background:#00FF87;width:0%;transition:width 1s linear;}
+
+/* STAGE */
+#stage{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;position:relative;}
+.scene{position:absolute;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;padding:48px;}
+.scene.active{pointer-events:auto;}
+
+/* TYPOGRAPHY — tutti i testi secondari almeno #888 */
+.super{font-size:clamp(72px,15vw,200px);font-weight:900;line-height:0.88;letter-spacing:-4px;text-align:center;}
+.lbl{font-size:11px;font-weight:500;letter-spacing:8px;text-transform:uppercase;color:#888;margin-bottom:14px;}
+.sub{font-size:clamp(12px,1.4vw,15px);color:#888;margin-top:16px;letter-spacing:3px;text-align:center;}
+
+/* COLORS */
+.run{color:#FF2079;}.cyc{color:#00FF87;}.cy2{color:#00D4FF;}.yel{color:#FFE000;}.ora{color:#FF6B00;}
+
+/* BADGE */
+.badge{display:inline-block;padding:6px 18px;border:1px solid currentColor;font-size:9px;letter-spacing:5px;text-transform:uppercase;margin-bottom:28px;border-radius:2px;}
+
+/* PHOTO */
+.photo-wrap{position:relative;overflow:hidden;flex-shrink:0;border-radius:2px;}
+.photo-wrap img{width:100%;height:100%;object-fit:cover;}
+.ph-port{width:280px;height:370px;}    /* portrait */
+.ph-land{width:480px;height:300px;}    /* landscape */
+.duotone-run img{filter:grayscale(80%) contrast(1.2) brightness(0.85);}
+.duotone-run::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,32,121,0.5) 0%,rgba(0,0,0,0.65) 70%);mix-blend-mode:multiply;pointer-events:none;}
+.duotone-cyc img{filter:grayscale(60%) contrast(1.1) brightness(0.85);}
+.duotone-cyc::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,255,135,0.35) 0%,rgba(0,0,0,0.55) 70%);mix-blend-mode:multiply;pointer-events:none;}
+.duotone-grizl img{filter:grayscale(50%) contrast(1.1) brightness(0.8);}
+.duotone-grizl::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,212,255,0.35) 0%,rgba(0,0,0,0.6) 70%);mix-blend-mode:multiply;pointer-events:none;}
+
+/* PHOTO+STATS */
+.photo-stats{display:flex;gap:52px;align-items:center;max-width:880px;width:100%;}
+.stats-col{flex:1;display:flex;flex-direction:column;gap:18px;}
+.stat-num{font-size:clamp(38px,7vw,78px);font-weight:900;line-height:1;}
+.stat-desc{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#777;margin-top:5px;}  /* era #555 */
+.divider{height:1px;background:#111;width:100%;margin:2px 0;}
+
+/* GRID — descrizioni #777 invece di #333 */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);width:100%;max-width:820px;border-top:1px solid #111;}
+.gc{padding:28px 24px;border-right:1px solid #111;border-bottom:1px solid #111;}
+.gc:nth-child(3n){border-right:none;}
+.gn{font-size:clamp(26px,4vw,50px);font-weight:900;line-height:1;}
+.gd{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#777;margin-top:8px;}  /* era #333 */
+
+/* SPLIT */
+.split{display:grid;grid-template-columns:1fr 1fr;width:100%;max-width:820px;gap:1px;background:#111;}
+.sp{background:#000;padding:48px 40px;display:flex;flex-direction:column;justify-content:center;}
+.sp-yr{font-size:clamp(56px,10vw,110px);font-weight:900;line-height:1;}
+.sp-st{font-size:clamp(15px,2vw,22px);font-weight:700;margin-top:10px;color:#ccc;}
+.sp-sub{font-size:10px;letter-spacing:3px;color:#777;text-transform:uppercase;margin-top:10px;}  /* era #333 */
+
+/* RIDES */
+.ride-list{width:100%;max-width:700px;}
+.rr{border-bottom:1px solid #0d0d0d;padding:20px 0;display:flex;align-items:baseline;gap:24px;}
+.rr-km{font-size:clamp(40px,8vw,96px);font-weight:900;line-height:1;min-width:150px;}
+.rr-date{font-size:clamp(13px,1.6vw,18px);font-weight:700;color:#ccc;}
+.rr-detail{font-size:10px;letter-spacing:3px;color:#777;text-transform:uppercase;margin-top:4px;}  /* era #444 */
+
+/* DASHBOARD MOCK */
+.db-wrap{width:100%;max-width:920px;}
+.db-head{font-size:clamp(40px,7vw,88px);font-weight:900;letter-spacing:-2px;margin-bottom:20px;line-height:1;}
+.db-mock{background:#080808;border-radius:6px;border:1px solid #1a1a1a;overflow:hidden;}
+.db-topbar{background:#0a0a0a;padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #111;}
+.db-dot{width:10px;height:10px;border-radius:50%;}
+.db-title-bar{font-size:10px;letter-spacing:4px;color:#444;text-transform:uppercase;margin-left:12px;}
+.db-tabs{display:flex;border-bottom:1px solid #111;overflow:hidden;}
+.db-tab{font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:8px 12px;color:#444;border-right:1px solid #111;white-space:nowrap;}
+.db-tab.on{color:#00FF87;border-bottom:2px solid #00FF87;margin-bottom:-1px;}
+.db-body{padding:16px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.db-card{background:#0d0d0d;border-radius:4px;padding:12px;border:1px solid #111;}
+.db-cv{font-size:clamp(16px,2.5vw,26px);font-weight:900;line-height:1;}
+.db-cl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#555;margin-top:5px;}
+.db-bottom{padding:0 20px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.db-chart{background:#0d0d0d;border-radius:4px;padding:12px;border:1px solid #111;}
+.db-ct{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#555;margin-bottom:10px;}
+.db-zones{display:flex;gap:5px;}
+.db-zone{flex:1;padding:7px 4px;border-radius:3px;text-align:center;}
+.db-zn{font-size:13px;font-weight:900;}
+.db-zl{font-size:6px;letter-spacing:1px;text-transform:uppercase;opacity:0.7;margin-top:2px;}
+.db-bars{display:flex;gap:3px;align-items:flex-end;height:55px;}
+.db-bar{flex:1;border-radius:2px 2px 0 0;}
+
+/* CTA */
+.cta-main{font-size:clamp(28px,5.5vw,68px);font-weight:900;line-height:1.0;letter-spacing:-1px;text-align:center;}
+.cta-sub{font-size:clamp(13px,1.8vw,19px);color:#999;margin-top:22px;line-height:1.7;letter-spacing:1px;text-align:center;}
+.cta-tag{font-size:10px;letter-spacing:6px;text-transform:uppercase;color:#444;margin-top:36px;text-align:center;}
+
+/* FINALE */
+.finale-logo{font-size:clamp(34px,6.5vw,80px);font-weight:900;letter-spacing:-2px;text-align:center;line-height:1.0;}
+.finale-tag{font-size:12px;letter-spacing:10px;color:#888;text-transform:uppercase;margin-top:18px;text-align:center;}
+.finale-stats{display:flex;gap:28px;align-items:center;margin-top:44px;flex-wrap:wrap;justify-content:center;}
+.fs-item{text-align:center;}
+.fs-num{font-size:clamp(20px,3vw,34px);font-weight:900;}
+.fs-lbl{font-size:8px;letter-spacing:3px;color:#666;text-transform:uppercase;margin-top:4px;}
+.fs-div{width:1px;height:36px;background:#111;}
+
+/* CONTROLS */
+#progress{position:fixed;bottom:0;left:0;height:2px;background:#00FF87;width:0%;z-index:100;}
+#sound-btn{position:fixed;top:18px;right:18px;background:transparent;border:1px solid #1a1a1a;color:#555;font-size:9px;letter-spacing:3px;text-transform:uppercase;padding:6px 12px;cursor:pointer;z-index:200;transition:all .3s;}
+#sound-btn:hover{border-color:#888;color:#aaa;}
+#skip-btn{position:fixed;bottom:24px;right:24px;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#333;cursor:pointer;z-index:200;transition:color .3s;}
+#skip-btn:hover{color:#666;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);pointer-events:none;z-index:50;}
+#flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:80;transition:opacity 0.5s ease;}
+
+
+/* ═══════════════════════════════════════
+   SHORT SCREEN — iPhone landscape e simili
+   (altezza < 520px, orientamento landscape)
+   ═══════════════════════════════════════ */
+@media (max-height: 520px) and (orientation: landscape) {
+
+  /* Overlay iniziale */
+  #ov-logo  { font-size: clamp(24px, 5vw, 44px); }
+  #ov-tag   { font-size: 9px; letter-spacing: 6px; margin-top: 10px; }
+  #ov-cta   { margin-top: 24px; padding: 10px 28px; font-size: 9px; }
+
+  /* Countdown */
+  #cd-num   { font-size: clamp(60px, 18vw, 130px); }
+
+  /* Scene */
+  .scene    { padding: 14px 20px; }
+  .super    { font-size: clamp(28px, 7vw, 60px); letter-spacing: -2px; }
+  .lbl      { font-size: 8px; letter-spacing: 5px; margin-bottom: 8px; }
+  .sub      { font-size: 9px; margin-top: 8px; }
+  .badge    { padding: 4px 12px; font-size: 7px; margin-bottom: 14px; }
+
+  /* Foto: molto più piccole */
+  .ph-port  { width: 110px; height: 148px; }
+  .ph-land  { width: 200px; height: 126px; }
+  .photo-stats { gap: 20px; }
+
+  /* Stats col: testo ridotto */
+  .stats-col { gap: 4px !important; }
+
+  /* S4: pannelli testo */
+  #s4 [style*="padding:36px 32px"] { padding: 10px 14px !important; }
+  #s4 [style*="clamp(40px,6.5vw"]  { font-size: clamp(18px, 5.5vw, 36px) !important; }
+  #s4 [style*="clamp(13px,1.7vw"]  { font-size: 10px !important; }
+  #s4 [style*="clamp(60px,11vw"]   { font-size: clamp(32px, 9vw, 72px) !important; letter-spacing: -2px !important; }
+  #s4 [style*="clamp(22px,3.5vw"]  { font-size: clamp(12px, 3.5vw, 22px) !important; }
+
+  /* Dashboard mock */
+  .db-mock  { transform: scale(0.5); transform-origin: top center; margin-bottom: -130px; }
+
+  /* CTA */
+  .cta-main { font-size: clamp(18px, 5.5vw, 40px); line-height: 1.0; }
+  .cta-tag  { font-size: 7px; margin-top: 14px; }
+  #s11 [style*="margin-bottom:28px"] { margin-bottom: 10px !important; }
+  #s11 [style*="margin-top:28px"]    { margin-top: 14px !important; }
+  #s11 img  { width: 70px !important; top: 10px !important; left: 12px !important; }
+
+  /* Finale stats */
+  .finale-stats { gap: 14px; margin-top: 20px; }
+  .fs-num { font-size: clamp(14px, 4vw, 24px); }
+  .fs-div { height: 20px; }
+  .finale-logo { font-size: clamp(20px, 5.5vw, 40px); }
+
+  /* Sound e skip btn */
+  #sound-btn { top: 8px; right: 8px; padding: 4px 8px; font-size: 7px; }
+  #skip-btn  { bottom: 10px; right: 10px; font-size: 7px; }
+}
+
+/* ═══════════════════════════════════════════════
+   PORTRAIT MOBILE — layout verticale completo
+   ═══════════════════════════════════════════════ */
+@media (max-width: 767px) and (orientation: portrait) {
+
+  /* Scene: centrate, padding ridotto */
+  .scene {
+    padding: 20px 16px;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  /* Testi */
+  .super  { font-size: clamp(52px, 16vw, 100px); letter-spacing: -2px; }
+  .lbl    { font-size: 9px; letter-spacing: 5px; }
+  .sub    { font-size: 11px; margin-top: 8px; }
+  .badge  { padding: 5px 14px; font-size: 8px; margin-bottom: 14px; }
+
+  /* Overlay */
+  #ov-logo { font-size: clamp(32px, 10vw, 56px); }
+  #ov-tag  { font-size: 10px; letter-spacing: 6px; margin-top: 10px; }
+  #ov-cta  { margin-top: 36px; }
+
+  /* Foto */
+  .ph-port { width: min(54vw, 200px); height: auto; aspect-ratio: 3/4; }
+  .ph-land { width: min(80vw, 300px); height: auto; aspect-ratio: 3/2; }
+
+  /* Photo+stats: colonna */
+  .photo-stats {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    max-width: 100%;
+  }
+  .stats-col {
+    align-items: center !important;
+    text-align: center !important;
+    gap: 8px !important;
+    width: 100%;
+  }
+  .stats-col > div { text-align: center !important; }
+  .divider { display: none; }
+
+  /* S1/S5 fase */
+  #s1 .super, #s5 .super { font-size: clamp(58px, 18vw, 110px); }
+
+  /* S4: grid → colonna */
+  #s4 > div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 1fr 1fr !important;
+  }
+  #s4 [style*="padding:36px 32px"] { padding: 8px 14px !important; }
+  #s4 [style*="clamp(40px,6.5vw"]  { font-size: clamp(20px, 7vw, 36px) !important; }
+  #s4 [style*="clamp(13px,1.7vw"]  { font-size: 10px !important; }
+  #s4 [style*="clamp(60px,11vw"]   { font-size: clamp(38px, 12vw, 68px) !important; letter-spacing:-2px !important; }
+  #s4 [style*="clamp(22px,3.5vw"]  { font-size: clamp(13px, 4vw, 22px) !important; }
+
+  /* S3 stats */
+  #s3 .finale-stats { flex-direction: column; gap: 10px; }
+  #s3 .fs-div { display: none; }
+
+  /* Dashboard mock: ZOOM invece di transform (riduce spazio layout) */
+  .db-mock {
+    zoom: 0.56;
+    margin: 0 auto;
+  }
+
+  /* CTA S11 */
+  .cta-main { font-size: clamp(22px, 7.5vw, 48px); line-height: 1.0; }
+  .cta-tag  { font-size: 8px; margin-top: 14px; letter-spacing: 4px; }
+
+  /* Badge local legend: in portrait spostalo in basso, non sovrasta */
+  #s11 img[alt="local legend"] {
+    width: 64px !important;
+    top: auto !important;
+    bottom: 60px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    opacity: 0.5 !important;
+  }
+  #s11 [style*="margin-bottom:28px"] { margin-bottom: 10px !important; }
+  #s11 [style*="margin-top:28px"]    { margin-top: 12px !important; }
+
+  /* Controls */
+  #sound-btn { top: 8px; right: 8px; padding: 5px 10px; font-size: 8px; }
+  #skip-btn  { bottom: 10px; right: 10px; font-size: 8px; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- OVERLAY -->
+<div id="overlay">
+  <div id="ov-logo">&#9889; DZ CYCLING<br>AI LAB</div>
+  <div id="ov-tag">la strada misura tutto</div>
+  <div id="ov-cta">&#9654; CLICCA PER INIZIARE</div>
+</div>
+
+<!-- COUNTDOWN -->
+<div id="countdown">
+  <div id="cd-num">3</div>
+  <div id="cd-bar"><div id="cd-fill"></div></div>
+</div>
+
+<!-- AUDIO -->
+<audio id="bgmusic" loop preload="auto">
+  <source src="assets/thunderstruck.mp3" type="audio/mpeg">
+</audio>
+
+<!-- STAGE -->
+<div id="stage">
+
+<!-- S0: INTRO CLAIM -->
+
+<!-- S0: MENTRE TUTTI RIDEVATE -->
+<div class="scene" id="s0">
+  <div style="max-width:720px;text-align:center;">
+    <div style="font-size:clamp(22px,4vw,48px);font-weight:300;color:#bbb;
+                letter-spacing:2px;line-height:1.7;font-style:italic;">
+      Mentre tutti ridevate,
+    </div>
+    <div style="font-size:clamp(38px,7.5vw,96px);font-weight:900;
+                letter-spacing:-3px;line-height:0.9;color:#fff;margin-top:16px;
+                text-shadow:0 0 40px rgba(255,255,255,0.4),0 0 80px rgba(255,255,255,0.15);">
+      io macinavo<br><span class="cyc">km.</span>
+    </div>
+  </div>
+</div>
+
+<!-- S1: L'IDEA -->
+<div class="scene" id="s1">
+  <div style="text-align:center;max-width:700px;">
+    <div style="font-size:clamp(14px,2vw,20px);color:#666;letter-spacing:8px;
+                text-transform:uppercase;margin-bottom:32px;">
+      e in quelle lunghe ore in solitaria&hellip;
+    </div>
+    <div style="font-size:clamp(60px,13vw,160px);font-weight:900;
+                letter-spacing:-5px;line-height:0.85;color:#fff;
+                text-shadow:0 0 60px rgba(255,255,255,0.5),0 0 120px rgba(255,255,255,0.2);">
+      L'IDEA.
+    </div>
+    <div style="font-size:clamp(16px,2.5vw,28px);font-weight:700;
+                color:#aaa;letter-spacing:3px;margin-top:24px;text-transform:uppercase;">
+      l&rsquo;ossessione dei numeri
+    </div>
+  </div>
+</div>
+
+<!-- S2: NASCE LA DASHBOARD -->
+<div class="scene" id="s2">
+  <div style="text-align:center;">
+    <div style="font-size:clamp(16px,2.5vw,26px);font-weight:300;color:#888;
+                letter-spacing:5px;text-transform:uppercase;margin-bottom:18px;">
+      così nasce
+    </div>
+    <div style="font-size:clamp(52px,11vw,140px);font-weight:900;
+                letter-spacing:-4px;line-height:0.88;
+                text-shadow:0 0 60px rgba(255,255,255,0.3);">
+      LA <span class="cyc" style="text-shadow:0 0 50px rgba(0,255,135,0.6),0 0 100px rgba(0,255,135,0.3);">DASHBOARD</span>
+    </div>
+  </div>
+</div>
+
+<div class="scene" id="s3">
+  <div class="lbl">cycling intelligence</div>
+  <div style="font-size:clamp(38px,7vw,90px);font-weight:900;letter-spacing:-2px;line-height:0.92;text-align:center;">
+    I tuoi dati<br>
+    <span class="cyc">Strava</span><br>
+    raccontano<br>
+    una storia.
+  </div>
+  <div class="sub" style="margin-top:24px;font-size:clamp(14px,2.2vw,22px);">
+    La sai leggere?
+  </div>
+</div>
+
+<!-- S1: IL PROBLEMA -->
+<div class="scene" id="s4">
+  <div class="lbl" style="color:#FF2079;">il problema</div>
+  <div style="font-size:clamp(32px,6vw,80px);font-weight:900;line-height:0.92;text-align:center;max-width:820px;">
+    Hai migliaia di km<br>registrati.<br>
+    <span style="color:#FF2079;">Zero insight.</span>
+  </div>
+  <div style="margin-top:36px;display:flex;gap:32px;flex-wrap:wrap;justify-content:center;">
+    <div style="text-align:center;border:1px solid #1a1a1a;padding:20px 28px;border-radius:4px;">
+      <div style="font-size:clamp(28px,5vw,56px);font-weight:900;color:#333;">✓</div>
+      <div style="font-size:10px;letter-spacing:3px;color:#333;text-transform:uppercase;margin-top:8px;">Dati registrati</div>
+    </div>
+    <div style="text-align:center;border:1px solid #FF2079;padding:20px 28px;border-radius:4px;">
+      <div style="font-size:clamp(28px,5vw,56px);font-weight:900;color:#FF2079;">✗</div>
+      <div style="font-size:10px;letter-spacing:3px;color:#FF2079;text-transform:uppercase;margin-top:8px;">Analisi reale</div>
+    </div>
+    <div style="text-align:center;border:1px solid #FF2079;padding:20px 28px;border-radius:4px;">
+      <div style="font-size:clamp(28px,5vw,56px);font-weight:900;color:#FF2079;">✗</div>
+      <div style="font-size:10px;letter-spacing:3px;color:#FF2079;text-transform:uppercase;margin-top:8px;">Decisioni smart</div>
+    </div>
+  </div>
+</div>
+
+<!-- S2: LA SOLUZIONE -->
+<div class="scene" id="s5">
+  <div class="lbl" style="color:#00FF87;">la soluzione</div>
+  <div style="font-size:clamp(52px,12vw,140px);font-weight:900;letter-spacing:-4px;line-height:0.85;text-align:center;">
+    <span class="cyc">DZ</span><br>
+    <span style="font-size:clamp(28px,6vw,72px);color:#fff;letter-spacing:-2px;">CYCLING AI LAB</span>
+  </div>
+  <div style="margin-top:28px;font-size:clamp(14px,2vw,20px);color:#888;letter-spacing:2px;text-align:center;">
+    Trasforma i tuoi dati Strava in intelligenza ciclistica
+  </div>
+  <div style="margin-top:32px;display:flex;gap:24px;flex-wrap:wrap;justify-content:center;">
+    <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#00FF87;border:1px solid #00FF87;padding:8px 18px;border-radius:2px;">Zone HR</div>
+    <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#FFE000;border:1px solid #FFE000;padding:8px 18px;border-radius:2px;">Coach AI</div>
+    <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#00D4FF;border:1px solid #00D4FF;padding:8px 18px;border-radius:2px;">Eddington</div>
+    <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#FF6B00;border:1px solid #FF6B00;padding:8px 18px;border-radius:2px;">Top Rides</div>
+  </div>
+</div>
+
+<!-- S3: OVERVIEW DASHBOARD (riusato) -->
+<div class="scene" id="s6">
+  <div class="db-wrap">
+    <div class="db-head"><span class="cyc">DASH</span>BOARD<span class="yel">.</span></div>
+    <div class="db-mock">
+      <div class="db-topbar">
+        <div class="db-dot" style="background:#FF2079"></div>
+        <div class="db-dot" style="background:#FFE000"></div>
+        <div class="db-dot" style="background:#00FF87"></div>
+        <div class="db-title-bar">cycling_dashboard_v2.html &mdash; ZAK CYCLING AI LAB</div>
+      </div>
+      <div class="db-tabs">
+        <div class="db-tab on">Overview</div>
+        <div class="db-tab">Calendario</div>
+        <div class="db-tab">Zone HR</div>
+        <div class="db-tab">Coach</div>
+        <div class="db-tab">Top Rides</div>
+        <div class="db-tab">Arsenal</div>
+        <div class="db-tab">Eddington</div>
+        <div class="db-tab">&#127939; Running</div>
+      </div>
+      <div class="db-body">
+        <div class="db-card"><div class="db-cv cyc">1.049</div><div class="db-cl">Uscite Bici</div></div>
+        <div class="db-card"><div class="db-cv cy2">68.862</div><div class="db-cl">Km Totali</div></div>
+        <div class="db-card"><div class="db-cv yel">2.534h</div><div class="db-cl">Ore in Sella</div></div>
+        <div class="db-card"><div class="db-cv ora">E=109</div><div class="db-cl">Eddington</div></div>
+      </div>
+      <div class="db-bottom">
+        <div class="db-chart">
+          <div class="db-ct">Zone HR &mdash; % tempo</div>
+          <div class="db-zones">
+            <div class="db-zone" style="background:#00D4FF15;border:1px solid #00D4FF33"><div class="db-zn" style="color:#00D4FF">18%</div><div class="db-zl" style="color:#00D4FF">Z1</div></div>
+            <div class="db-zone" style="background:#00FF8715;border:1px solid #00FF8733"><div class="db-zn" style="color:#00FF87">31%</div><div class="db-zl" style="color:#00FF87">Z2</div></div>
+            <div class="db-zone" style="background:#FFE00015;border:1px solid #FFE00033"><div class="db-zn" style="color:#FFE000">28%</div><div class="db-zl" style="color:#FFE000">Z3</div></div>
+            <div class="db-zone" style="background:#FF6B0015;border:1px solid #FF6B0033"><div class="db-zn" style="color:#FF6B00">16%</div><div class="db-zl" style="color:#FF6B00">Z4</div></div>
+            <div class="db-zone" style="background:#FF207915;border:1px solid #FF207933"><div class="db-zn" style="color:#FF2079">7%</div><div class="db-zl" style="color:#FF2079">Z5</div></div>
+          </div>
+        </div>
+        <div class="db-chart">
+          <div class="db-ct">Km per anno &mdash; 2015–2026</div>
+          <div class="db-bars">
+            <div class="db-bar" style="height:22%;background:#00FF8722;"></div>
+            <div class="db-bar" style="height:38%;background:#00FF8733;"></div>
+            <div class="db-bar" style="height:45%;background:#00FF8744;"></div>
+            <div class="db-bar" style="height:58%;background:#00FF8755;"></div>
+            <div class="db-bar" style="height:50%;background:#00FF8744;"></div>
+            <div class="db-bar" style="height:72%;background:#00FF8766;"></div>
+            <div class="db-bar" style="height:88%;background:#00FF8788;"></div>
+            <div class="db-bar" style="height:100%;background:#00FF87;"></div>
+            <div class="db-bar" style="height:80%;background:#00FF8799;"></div>
+            <div class="db-bar" style="height:92%;background:#00FF87aa;"></div>
+            <div class="db-bar" style="height:68%;background:#00FF8777;"></div>
+            <div class="db-bar" style="height:42%;background:#00FF8744;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S4: ZONE HR (riusato) -->
+<div class="scene" id="s7">
+  <div class="db-wrap" style="max-width:960px;">
+    <div class="db-head" style="font-size:clamp(32px,5.5vw,64px);">
+      <span class="cyc">ZONE</span> HR<span class="run">.</span>
+    </div>
+    <div class="db-mock">
+      <div class="db-topbar">
+        <div class="db-dot" style="background:#FF2079"></div>
+        <div class="db-dot" style="background:#FFE000"></div>
+        <div class="db-dot" style="background:#00FF87"></div>
+        <div class="db-title-bar">Zone HR — 900 uscite con cardio · Dati reali Danilo Zaini</div>
+      </div>
+      <div style="padding:18px 24px 20px;display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:center;">
+        <!-- LEFT: barre orizzontali -->
+        <div>
+          <div style="font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#555;margin-bottom:16px;">DISTRIBUZIONE ZONE HR — 900 USCITE CON CARDIO</div>
+          <!-- Z1 -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <div style="font-size:10px;font-weight:700;color:#00D4FF;width:16px;">Z1</div>
+            <div style="font-size:10px;color:#555;width:72px;">Recovery</div>
+            <div style="flex:1;background:#111;border-radius:2px;height:22px;position:relative;">
+              <div style="width:6.8%;height:100%;background:#00D4FF;border-radius:2px;display:flex;align-items:center;padding-left:5px;min-width:50px;">
+                <span style="font-size:10px;font-weight:700;color:#000;">6.8%</span>
+              </div>
+            </div>
+            <div style="font-size:10px;color:#555;width:60px;text-align:right;">0–124 bpm</div>
+          </div>
+          <!-- Z2 -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <div style="font-size:10px;font-weight:700;color:#00FF87;width:16px;">Z2</div>
+            <div style="font-size:10px;color:#555;width:72px;">Endurance</div>
+            <div style="flex:1;background:#111;border-radius:2px;height:22px;position:relative;">
+              <div style="width:53.3%;height:100%;background:#00FF87;border-radius:2px;display:flex;align-items:center;padding-left:8px;">
+                <span style="font-size:10px;font-weight:700;color:#000;">53.3% (480)</span>
+              </div>
+            </div>
+            <div style="font-size:10px;color:#555;width:60px;text-align:right;">124–139 bpm</div>
+          </div>
+          <!-- Z3 -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <div style="font-size:10px;font-weight:700;color:#FFE000;width:16px;">Z3</div>
+            <div style="font-size:10px;color:#555;width:72px;">Zona Grigia</div>
+            <div style="flex:1;background:#111;border-radius:2px;height:22px;position:relative;">
+              <div style="width:32%;height:100%;background:#FFE000;border-radius:2px;display:flex;align-items:center;padding-left:8px;">
+                <span style="font-size:10px;font-weight:700;color:#000;">32.0% (288)</span>
+              </div>
+            </div>
+            <div style="font-size:10px;color:#555;width:60px;text-align:right;">139–146 bpm</div>
+          </div>
+          <!-- Z4 -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <div style="font-size:10px;font-weight:700;color:#FF6B00;width:16px;">Z4</div>
+            <div style="font-size:10px;color:#555;width:72px;">Soglia</div>
+            <div style="flex:1;background:#111;border-radius:2px;height:22px;position:relative;">
+              <div style="width:7.8%;height:100%;background:#FF6B00;border-radius:2px;display:flex;align-items:center;padding-left:5px;min-width:60px;">
+                <span style="font-size:10px;font-weight:700;color:#000;">7.8%</span>
+              </div>
+            </div>
+            <div style="font-size:10px;color:#555;width:60px;text-align:right;">146–157 bpm</div>
+          </div>
+          <!-- Z5 -->
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="font-size:10px;font-weight:700;color:#FF2079;width:16px;">Z5</div>
+            <div style="font-size:10px;color:#555;width:72px;">VO2max</div>
+            <div style="flex:1;background:#111;border-radius:2px;height:22px;position:relative;">
+              <div style="width:0.5%;height:100%;background:#FF2079;border-radius:2px;min-width:36px;display:flex;align-items:center;padding-left:5px;">
+                <span style="font-size:10px;font-weight:700;color:#fff;">0.1%</span>
+              </div>
+            </div>
+            <div style="font-size:10px;color:#555;width:60px;text-align:right;">157+ bpm</div>
+          </div>
+        </div>
+        <!-- RIGHT: donut SVG -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+          <div style="font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#555;">ZONE HR — DONUT</div>
+          <svg viewBox="0 0 200 200" width="160" height="160">
+            <!-- donut: Z2=53.3% green, Z3=32% yellow, Z4=7.8% orange, Z1=6.8% cyan, Z5=0.1% pink -->
+            <!-- circumference at r=70 = 439.8. Stroke-dasharray trick -->
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#0d0d0d" stroke-width="40"/>
+            <!-- Z2: 53.3% = 234.4deg offset 0 -->
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#00FF87" stroke-width="40"
+              stroke-dasharray="234.4 205.4" stroke-dashoffset="0" transform="rotate(-90 100 100)"/>
+            <!-- Z3: 32% = 140.7deg offset -234.4 -->
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#FFE000" stroke-width="40"
+              stroke-dasharray="140.7 298.1" stroke-dashoffset="-234.4" transform="rotate(-90 100 100)"/>
+            <!-- Z4: 7.8% = 34.3deg offset -375.1 -->
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#FF6B00" stroke-width="40"
+              stroke-dasharray="34.3 405.5" stroke-dashoffset="-375.1" transform="rotate(-90 100 100)"/>
+            <!-- Z1: 6.8% = 29.9deg offset -409.4 -->
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#00D4FF" stroke-width="40"
+              stroke-dasharray="29.9 409.9" stroke-dashoffset="-409.4" transform="rotate(-90 100 100)"/>
+            <!-- Z5: 0.1% tiny -->
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#FF2079" stroke-width="40"
+              stroke-dasharray="0.4 439.4" stroke-dashoffset="-439.3" transform="rotate(-90 100 100)"/>
+          </svg>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
+            <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:#555;"><div style="width:8px;height:8px;background:#00D4FF;border-radius:1px;"></div>Recovery</div>
+            <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:#555;"><div style="width:8px;height:8px;background:#00FF87;border-radius:1px;"></div>Endurance</div>
+            <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:#555;"><div style="width:8px;height:8px;background:#FFE000;border-radius:1px;"></div>Zona Grigia</div>
+            <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:#555;"><div style="width:8px;height:8px;background:#FF6B00;border-radius:1px;"></div>Soglia</div>
+            <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:#555;"><div style="width:8px;height:8px;background:#FF2079;border-radius:1px;"></div>VO2max</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S5: COACH AI + EDDINGTON (riusato) -->
+<div class="scene" id="s8">
+  <div class="db-wrap">
+    <div class="db-head"><span class="yel">ANALISI</span> AI<span class="run">.</span></div>
+    <div class="db-mock">
+      <div class="db-topbar">
+        <div class="db-dot" style="background:#FF2079"></div>
+        <div class="db-dot" style="background:#FFE000"></div>
+        <div class="db-dot" style="background:#00FF87"></div>
+        <div class="db-title-bar">Coach AI &mdash; Eddington Tracker &mdash; Personalizzato sui tuoi dati</div>
+      </div>
+      <div style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="db-chart" style="padding:16px;">
+          <div class="db-ct" style="color:#FFE000;font-size:9px;margin-bottom:12px;">&#127919; COACH AI — Analisi HR personale</div>
+          <div style="font-size:11px;color:#666;line-height:1.9;">
+            LTHR: <span style="color:#FF6B00;font-weight:700;">146 bpm</span><br>
+            HR media lunghe: <span style="color:#00FF87;font-weight:700;">138 bpm (Z2)</span><br>
+            Polarizzazione: <span style="color:#FFE000;font-weight:700;">62% Z1-Z2 / 38% Z3+</span><br>
+            Tendenza: <span style="color:#00D4FF;font-weight:700;">Endurance build &#8593;</span>
+          </div>
+          <div style="margin-top:12px;padding:10px;background:#111;border-radius:3px;border-left:2px solid #00FF87;">
+            <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:6px;">Raccomandazione coach</div>
+            <div style="font-size:11px;color:#888;line-height:1.6;">Aumenta uscite Z2 &gt;3h. 8 ride &gt;110km per E=110. Target settembre 2026.</div>
+          </div>
+        </div>
+        <div class="db-chart" style="padding:16px;">
+          <div class="db-ct" style="color:#00D4FF;font-size:9px;margin-bottom:10px;">&#128202; EDDINGTON NUMBER — live tracker</div>
+          <div style="text-align:center;margin:6px 0;">
+            <div style="font-size:clamp(44px,6vw,68px);font-weight:900;color:#00D4FF;line-height:1;">109</div>
+            <div style="font-size:8px;letter-spacing:3px;color:#444;margin-top:4px;text-transform:uppercase;">numero attuale</div>
+          </div>
+          <div style="background:#111;border-radius:3px;overflow:hidden;height:5px;margin:12px 0;">
+            <div style="width:93%;height:100%;background:linear-gradient(90deg,#00D4FF,#00FF87);border-radius:3px;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:8px;color:#444;letter-spacing:2px;text-transform:uppercase;">
+            <span>E=109</span><span style="color:#00FF87;">E=110</span>
+          </div>
+          <div style="margin-top:10px;font-size:10px;color:#666;">Mancano <span style="color:#FFE000;font-weight:700;">8 uscite &gt;110km</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S6: COME FUNZIONA -->
+<div class="scene" id="s9">
+  <div class="lbl">come funziona</div>
+  <div style="font-size:clamp(32px,5.5vw,64px);font-weight:900;line-height:0.92;text-align:center;margin-bottom:48px;">
+    3 <span class="cyc">step</span>.<br>Niente di più.
+  </div>
+  <div style="display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;justify-content:center;max-width:900px;width:100%;">
+    <div style="flex:1;min-width:220px;text-align:center;">
+      <div style="font-size:clamp(48px,8vw,80px);font-weight:900;color:#FF2079;line-height:1;">01</div>
+      <div style="font-size:12px;letter-spacing:4px;text-transform:uppercase;color:#FF2079;margin:10px 0 8px;">Esporta</div>
+      <div style="font-size:clamp(13px,1.6vw,16px);color:#666;line-height:1.6;">Scarica il tuo storico<br>completo da Strava.<br>Un click, un file zip.</div>
+    </div>
+    <div style="width:1px;height:120px;background:#111;align-self:center;"></div>
+    <div style="flex:1;min-width:220px;text-align:center;">
+      <div style="font-size:clamp(48px,8vw,80px);font-weight:900;color:#00FF87;line-height:1;">02</div>
+      <div style="font-size:12px;letter-spacing:4px;text-transform:uppercase;color:#00FF87;margin:10px 0 8px;">Invia</div>
+      <div style="font-size:clamp(13px,1.6vw,16px);color:#666;line-height:1.6;">Mandi il file.<br>Noi elaboriamo<br>tutti i tuoi dati.</div>
+    </div>
+    <div style="width:1px;height:120px;background:#111;align-self:center;"></div>
+    <div style="flex:1;min-width:220px;text-align:center;">
+      <div style="font-size:clamp(48px,8vw,80px);font-weight:900;color:#FFE000;line-height:1;">03</div>
+      <div style="font-size:12px;letter-spacing:4px;text-transform:uppercase;color:#FFE000;margin:10px 0 8px;">Ricevi</div>
+      <div style="font-size:clamp(13px,1.6vw,16px);color:#666;line-height:1.6;">La tua dashboard<br>personalizzata.<br>Pronta in 24h.</div>
+    </div>
+  </div>
+</div>
+
+<!-- S7: PERCHÉ DZ -->
+<div class="scene" id="s10">
+  <div class="lbl">perché scegliere dz</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:860px;width:100%;">
+    <div style="border:1px solid #111;border-left:3px solid #00FF87;padding:22px 24px;border-radius:2px;">
+      <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#00FF87;margin-bottom:10px;">Dati reali</div>
+      <div style="font-size:clamp(14px,1.8vw,18px);color:#ccc;line-height:1.6;">Analisi basata sui tuoi km, non su medie generiche.</div>
+    </div>
+    <div style="border:1px solid #111;border-left:3px solid #FFE000;padding:22px 24px;border-radius:2px;">
+      <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#FFE000;margin-bottom:10px;">Coach AI</div>
+      <div style="font-size:clamp(14px,1.8vw,18px);color:#ccc;line-height:1.6;">Raccomandazioni personalizzate, aggiornate ad ogni uscita.</div>
+    </div>
+    <div style="border:1px solid #111;border-left:3px solid #FF2079;padding:22px 24px;border-radius:2px;">
+      <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#FF2079;margin-bottom:10px;">Zone HR</div>
+      <div style="font-size:clamp(14px,1.8vw,18px);color:#ccc;line-height:1.6;">Scopri se alleni davvero nella zona giusta o stai sprecando km.</div>
+    </div>
+    <div style="border:1px solid #111;border-left:3px solid #00D4FF;padding:22px 24px;border-radius:2px;">
+      <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#00D4FF;margin-bottom:10px;">Eddington</div>
+      <div style="font-size:clamp(14px,1.8vw,18px);color:#ccc;line-height:1.6;">La metrica che separa chi pedala da chi si allena.</div>
+    </div>
+  </div>
+</div>
+
+<!-- S8: CTA -->
+<div class="scene" id="s11">
+  <div style="font-size:9px;letter-spacing:6px;text-transform:uppercase;color:#444;margin-bottom:28px;">vuoi la tua dashboard?</div>
+  <div class="cta-main">
+    <span class="cyc">Scarica il tuo storico</span><br>
+    da <span class="yel">Strava</span><span style="color:#fff">, invialo</span><br>
+    e ricevi la tua<br>
+    <span class="run">Dashboard</span><br>
+    <span style="color:#FFE000;font-size:clamp(36px,7vw,90px);letter-spacing:-2px;">in 24h.</span>
+  </div>
+  <div style="margin-top:28px;text-align:center;">
+    <div style="font-size:clamp(13px,1.8vw,20px);color:#555;letter-spacing:1px;">
+      Se ne hai pochi, vai a giocare a&nbsp;<span style="color:#00FF87;font-weight:900;font-size:clamp(16px,2.5vw,26px);letter-spacing:3px;">PADEL</span><span style="color:#fff;font-weight:900;">.</span>
+    </div>
+  </div>
+  <div class="cta-tag" style="margin-top:32px;">&#9889; DZ CYCLING AI LAB &nbsp;&middot;&nbsp; la strada misura tutto</div>
+</div>
+
+<!-- S9: FINALE -->
+<div class="scene" id="s12">
+  <div class="finale-logo">
+    <span class="cyc">&#9889;</span> DZ CYCLING<br>AI LAB
+  </div>
+  <div class="finale-tag">la strada misura tutto</div>
+  <div class="finale-stats">
+    <div class="fs-item"><div class="fs-num cyc">5</div><div class="fs-lbl">moduli analisi</div></div>
+    <div class="fs-div"></div>
+    <div class="fs-item"><div class="fs-num yel">24h</div><div class="fs-lbl">consegna</div></div>
+    <div class="fs-div"></div>
+    <div class="fs-item"><div class="fs-num run">100%</div><div class="fs-lbl">dati tuoi</div></div>
+  </div>
+</div>
+
+</div><!-- /stage -->
+
+<!-- UI -->
+<button id="sound-btn" onclick="toggleSound()">&#9833; AUDIO ON</button>
+<div id="skip-btn" onclick="skipToEnd()">SKIP &rarr;</div>
+<div id="progress"></div>
+<div id="flash"></div>
+
+<script>
+var SCENES=[
+  {id:'s0',  start:0,     anim:'fade' },   // Mentre tutti ridevate
+  {id:'s1',  start:7000,  anim:'scale'},   // L'IDEA
+  {id:'s2',  start:14000, anim:'fade' },   // Nasce la Dashboard
+  {id:'s3',  start:21000, anim:'fade' },   // I tuoi dati Strava
+  {id:'s4',  start:27000, anim:'scale'},   // Il problema
+  {id:'s5',  start:33000, anim:'scale'},   // La soluzione DZ
+  {id:'s6',  start:39000, anim:'slide'},   // Overview Dashboard
+  {id:'s7',  start:47000, anim:'slide'},   // Zone HR
+  {id:'s8',  start:55000, anim:'slide'},   // Coach AI + Eddington
+  {id:'s9',  start:63000, anim:'fade' },   // Come funziona
+  {id:'s10', start:72000, anim:'scale'},   // Perché DZ
+  {id:'s11', start:80000, anim:'slide'},   // CTA
+  {id:'s12', start:88000, anim:'fade' }    // Finale
+];
+var TOTAL=96000;
+
+var curScene=-1, startTime=null, rafId=null, soundOn=true;
+
+function doFlash(){
+  var f=document.getElementById('flash');
+  f.style.transition='none';f.style.opacity='0.18';
+  requestAnimationFrame(function(){f.style.transition='opacity 0.5s ease';f.style.opacity='0';});
+}
+
+function showScene(idx){
+  if(idx===curScene)return;
+  SCENES.forEach(function(s){
+    var el=document.getElementById(s.id);
+    if(el){el.style.opacity='0';el.classList.remove('active');}
+  });
+  if(idx<0||idx>=SCENES.length)return;
+  curScene=idx;
+  var sc=SCENES[idx],el=document.getElementById(sc.id);
+  if(!el)return;
+  el.classList.add('active');
+  if(sc.anim==='scale'){
+    el.style.transform='scale(0.94)';el.style.transition='opacity 0.8s ease,transform 0.8s ease';
+    requestAnimationFrame(function(){el.style.opacity='1';el.style.transform='scale(1)';});
+  }else if(sc.anim==='slide'){
+    el.style.transform='translateY(22px)';el.style.transition='opacity 0.7s ease,transform 0.7s ease';
+    requestAnimationFrame(function(){el.style.opacity='1';el.style.transform='translateY(0)';});
+  }else{
+    el.style.transition='opacity 1s ease';
+    requestAnimationFrame(function(){el.style.opacity='1';});
+  }
+  if(idx>0)doFlash();
+}
+
+function tick(ts){
+  if(!startTime)startTime=ts;
+  var el=ts-startTime;
+  document.getElementById('progress').style.width=Math.min(100,el/TOTAL*100)+'%';
+  var target=-1;
+  for(var i=SCENES.length-1;i>=0;i--){if(el>=SCENES[i].start){target=i;break;}}
+  showScene(target);
+  if(el<TOTAL) rafId=requestAnimationFrame(tick);
+  else showScene(SCENES.length-1);
+}
+
+function skipToEnd(){
+  cancelAnimationFrame(rafId);showScene(SCENES.length-1);
+  document.getElementById('progress').style.width='100%';
+}
+
+function toggleSound(){
+  var m=document.getElementById('bgmusic');
+  soundOn=!soundOn;
+  m.volume=soundOn?1:0;
+  document.getElementById('sound-btn').textContent=(soundOn?'♪ AUDIO ON':'♪ AUDIO OFF');
+}
+
+function runCountdown(){
+  var cd=document.getElementById('countdown');
+  var num=document.getElementById('cd-num');
+  var fill=document.getElementById('cd-fill');
+  cd.style.display='flex';
+  var count=3;
+  num.textContent=count;
+  fill.style.width='0%';
+  var interval=setInterval(function(){
+    count--;
+    if(count>0){
+      num.textContent=count;
+      fill.style.width=((3-count)/3*100)+'%';
+    }else{
+      clearInterval(interval);
+      cd.style.display='none';
+      requestAnimationFrame(tick);
+    }
+  },1000);
+}
+
+function handleStart(){
+  var ov=document.getElementById('overlay');
+  ov.classList.add('hide');
+  var m=document.getElementById('bgmusic');
+  m.volume=1;
+  m.play().catch(function(){});
+  setTimeout(runCountdown,600);
+}
+
+document.getElementById('overlay').addEventListener('click',handleStart);
+</script>
+
+
+<script>
+function applyPortraitFix(){
+  var isPortrait = window.innerWidth < 768 && window.innerHeight > window.innerWidth;
+  document.body.classList.toggle('portrait-mobile', isPortrait);
+  if(!isPortrait) return;
+
+  var W = window.innerWidth;
+
+  /* Scene: centra verticalmente */
+  document.querySelectorAll('.scene').forEach(function(el){
+    el.style.justifyContent = 'center';
+    el.style.padding = '20px 16px';
+    el.style.overflow = 'hidden';
+  });
+
+  /* Photo-stats: colonna centrata */
+  document.querySelectorAll('.photo-stats').forEach(function(el){
+    el.style.flexDirection = 'column';
+    el.style.alignItems = 'center';
+    el.style.gap = '14px';
+    el.style.maxWidth = '100%';
+    el.style.width = '100%';
+  });
+
+  /* Stats-col: testo centrato */
+  document.querySelectorAll('.stats-col').forEach(function(el){
+    el.style.alignItems = 'center';
+    el.style.textAlign = 'center';
+    el.style.gap = '8px';
+    el.style.width = '100%';
+  });
+  document.querySelectorAll('.stats-col > div').forEach(function(el){
+    el.style.textAlign = 'center';
+  });
+
+  /* Foto portrait */
+  document.querySelectorAll('.ph-port').forEach(function(el){
+    el.style.width = Math.min(W * 0.52, 190) + 'px';
+    el.style.height = 'auto';
+    el.style.aspectRatio = '3/4';
+  });
+
+  /* Foto landscape */
+  document.querySelectorAll('.ph-land').forEach(function(el){
+    el.style.width = Math.min(W * 0.82, 310) + 'px';
+    el.style.height = 'auto';
+    el.style.aspectRatio = '3/2';
+  });
+
+  /* Dividers nascosti */
+  document.querySelectorAll('.divider').forEach(function(el){
+    el.style.display = 'none';
+  });
+
+  /* S4: grid 50/50 → due righe */
+  var s4grid = document.querySelector('#s4 > div[style*="grid"]');
+  if(s4grid){
+    s4grid.style.gridTemplateColumns = '1fr';
+    s4grid.style.gridTemplateRows = '1fr 1fr';
+  }
+  /* S4: padding pannelli */
+  document.querySelectorAll('#s4 [style*="padding:36px 32px"]').forEach(function(el){
+    el.style.padding = '8px 14px';
+  });
+  /* S4: font km */
+  document.querySelectorAll('#s4 [style*="6.5vw"]').forEach(function(el){
+    el.style.fontSize = 'clamp(20px,7vw,38px)';
+  });
+  /* S4: LA SVOLTA testo centrale */
+  document.querySelectorAll('#s4 [style*="11vw"]').forEach(function(el){
+    el.style.fontSize = 'clamp(38px,12vw,68px)';
+    el.style.letterSpacing = '-2px';
+  });
+
+  /* Dashboard mock: zoom riduce spazio layout */
+  document.querySelectorAll('.db-mock').forEach(function(el){
+    el.style.zoom = '0.54';
+    el.style.margin = '0 auto';
+  });
+
+  /* S11: badge in basso centrato, non sovrasta */
+  var badge = document.querySelector('#s11 img[alt="local legend"]');
+  if(badge){
+    badge.style.width = '58px';
+    badge.style.top = 'auto';
+    badge.style.bottom = '52px';
+    badge.style.left = '50%';
+    badge.style.transform = 'translateX(-50%)';
+    badge.style.opacity = '0.45';
+  }
+
+  /* S11 margini */
+  document.querySelectorAll('#s11 [style*="margin-bottom:28px"]').forEach(function(el){
+    el.style.marginBottom = '10px';
+  });
+  document.querySelectorAll('#s11 [style*="margin-top:28px"]').forEach(function(el){
+    el.style.marginTop = '12px';
+  });
+}
+
+/* Esegui subito e ad ogni cambio orientamento */
+document.addEventListener('DOMContentLoaded', applyPortraitFix);
+window.addEventListener('orientationchange', function(){ setTimeout(applyPortraitFix, 200); });
+window.addEventListener('resize', applyPortraitFix);
+</script>
+
+</body>
+</html>

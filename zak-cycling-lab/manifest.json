@@ -1,0 +1,11 @@
+{
+  "name": "ZAK Cycling AI Lab",
+  "short_name": "ZAK LAB",
+  "description": "La strada misura tutto",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "landscape",
+  "icons": []
+}
